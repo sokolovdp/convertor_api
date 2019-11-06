@@ -9,12 +9,14 @@ Request = namedtuple('Request', 'method url params')
 
 async def database_post(method, params):
     logger.debug(f'database view {method}')
-    return None, 200
+    result = {'updated': 3}
+    return json.dumps(result), 201
 
 
 async def convert_get(method, params):
     logger.debug(f'converter view {method}')
-    return None, 200
+    result = {'result': 3700.24}
+    return json.dumps(result), 200
 
 
 routes = {
@@ -81,7 +83,7 @@ async def request_handler(conn):
             logger.debug(f'response: {body} {status}')
         else:
             status = 404
-            body = ' '
+            body = ''
         response = make_response(body, status)
         await main_loop.sock_sendall(conn, response)
     conn.close()
