@@ -4,25 +4,9 @@ import json
 import logging
 from collections import namedtuple
 
+from api import routes
+
 Request = namedtuple('Request', 'method url params')
-
-
-async def database_post(method, params):
-    logger.debug(f'database view {method}')
-    result = {'updated': 3}
-    return json.dumps(result), 201
-
-
-async def convert_get(method, params):
-    logger.debug(f'converter view {method}')
-    result = {'result': 3700.24}
-    return json.dumps(result), 200
-
-
-routes = {
-    '/convert': convert_get,
-    '/database': database_post
-}
 
 
 def make_header(status: int) -> bytes:
