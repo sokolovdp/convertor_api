@@ -71,7 +71,7 @@ def parse_request(request: bytes) -> tuple:
 
 
 host = 'localhost'
-port = 9527
+port = 8888
 server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 server_socket.setblocking(False)
@@ -85,7 +85,7 @@ logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger("asyncio")
 
 
-async def handler(conn):
+async def request_handler(conn):
     req_bytes = await main_loop.sock_recv(conn, 1024)
     if req_bytes:
         request = Request(*parse_request(req_bytes))
@@ -96,15 +96,15 @@ async def handler(conn):
     conn.close()
 
 
-async def server(sock, loop):
+async def http_server(sock, loop):
     logger.debug('converter server started.....')
     while True:
         conn, addr = await loop.sock_accept(sock)
-        loop.create_task(handler(conn))
+        loop.create_task(request_handler(conn))
 
 
 try:
-    main_loop.run_until_complete(server(server_socket, main_loop))
+    main_loop.run_until_complete(http_server(server_socket, main_loop))
 except KeyboardInterrupt:
     pass
 finally:
