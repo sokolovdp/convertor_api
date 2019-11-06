@@ -61,8 +61,8 @@ def parse_request(request: bytes) -> tuple:
     method, url, *_ = query.split(' ')
     params = {}
     if '?' in url:
-        query_params = parse_query_string(url.split('?', 1)[1])
-        params.update(query_params)
+        url, query_params = url.split('?', 1)
+        params.update(parse_query_string(query_params))
     if body:
         body_params = json.loads(body)
         params.update(body_params)
