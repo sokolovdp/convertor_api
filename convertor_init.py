@@ -1,6 +1,7 @@
 import asyncio
 import socket
 import json
+import logging
 from collections import namedtuple
 
 Request = namedtuple('Request', 'method url params')
@@ -78,13 +79,17 @@ server_socket.bind((host, port))
 server_socket.listen(10)
 
 main_loop = asyncio.get_event_loop()
+main_loop.set_debug(enabled=True)
+
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger("asyncio")
 
 
 async def handler(conn):
     req_bytes = await main_loop.sock_recv(conn, 1024)
     if req_bytes:
         request = Request(*parse_request(req_bytes))
-        print(request.method, request.url, request.params)
+        logger.info(f'{request.method} {request.url}  {request.params}')
         resp = make_header_err()
         resp += make_body_err()
         await main_loop.sock_sendall(conn, resp)
@@ -92,7 +97,7 @@ async def handler(conn):
 
 
 async def server(sock, loop):
-    print('converter server started.....')
+    logger.debug('converter server started.....')
     while True:
         conn, addr = await loop.sock_accept(sock)
         loop.create_task(handler(conn))
