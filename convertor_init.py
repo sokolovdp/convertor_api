@@ -7,46 +7,32 @@ from collections import namedtuple
 Request = namedtuple('Request', 'method url params')
 
 
-def database_post(method, params):
-    return None
+async def database_post(method, params):
+    logger.debug(f'database view {method}')
+    return None, 200
 
 
-def convert_get(method, params):
-    return None
+async def convert_get(method, params):
+    logger.debug(f'converter view {method}')
+    return None, 200
 
 
 routes = {
-    '/converter': convert_get,
+    '/convert': convert_get,
     '/database': database_post
 }
 
 
-def make_header_ok():
-    header = b"HTTP/1.1 200 OK\r\n"
-    header += b"Content-Type: application/json\r\n"
-    header += b"\r\n"
-    return header
+def make_header(status: int) -> bytes:
+    msg = 'OK' if status in (200, 201) else 'ERROR'
+    header = f'HTTP/1.1 {status} {msg}\r\nContent-Type: application/json\r\n\r\n'
+    return header.encode()
 
 
-def make_header_err():
-    header = b"HTTP/1.1 400 ERROR\r\n"
-    header += b"Content-Type: application/json\r\n"
-    header += b"\r\n"
-    return header
-
-
-def make_body_ok():
-    resp = b'{'
-    resp += b'"data": "hello world"'
-    resp += b'}'
-    return resp
-
-
-def make_body_err():
-    resp = b'{'
-    resp += b'"error": "invalid params"'
-    resp += b'}'
-    return resp
+def make_response(json_string, status=200) -> bytes:
+    header = make_header(status)
+    body = json_string.encode() if json_string else b''
+    return header + body
 
 
 def parse_query_string(query_str: str) -> dict:
@@ -58,7 +44,7 @@ def parse_query_string(query_str: str) -> dict:
 
 
 def parse_request(request: bytes) -> tuple:
-    query, *_, body = request.decode('utf-8').split('\r\n')
+    query, *_, body = request.decode().split('\r\n')
     method, url, *_ = query.split(' ')
     params = {}
     if '?' in url:
@@ -89,10 +75,15 @@ async def request_handler(conn):
     req_bytes = await main_loop.sock_recv(conn, 1024)
     if req_bytes:
         request = Request(*parse_request(req_bytes))
-        logger.info(f'{request.method} {request.url}  {request.params}')
-        resp = make_header_err()
-        resp += make_body_err()
-        await main_loop.sock_sendall(conn, resp)
+        logger.debug(f'request: {request.method} {request.url}  {request.params}')
+        if request.url in routes:
+            body, status = await routes[request.url](request.method, request.params)
+            logger.debug(f'response: {body} {status}')
+        else:
+            status = 404
+            body = ' '
+        response = make_response(body, status)
+        await main_loop.sock_sendall(conn, response)
     conn.close()
 
 
