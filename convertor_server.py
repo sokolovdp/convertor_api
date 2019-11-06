@@ -42,6 +42,29 @@ def parse_request(request: bytes) -> tuple:
     return method, url, params
 
 
+async def request_handler(conn):
+    req_bytes = await main_loop.sock_recv(conn, 1024)
+    if req_bytes:
+        request = Request(*parse_request(req_bytes))
+        logger.debug(f'request: {request.method} {request.url}  {request.params}')
+        if request.url in routes:
+            body, status = await routes[request.url](request.method, request.params)
+            logger.debug(f'response: {body} {status}')
+        else:
+            status = 404
+            body = ''
+        response = make_response(body, status)
+        await main_loop.sock_sendall(conn, response)
+    conn.close()
+
+
+async def http_server(sock, loop):
+    logger.debug('converter server started.....')
+    while True:
+        conn, addr = await loop.sock_accept(sock)
+        loop.create_task(request_handler(conn))
+
+
 if __name__ == '__main__':
     host = '0.0.0.0'
     port = 8888
@@ -56,30 +79,6 @@ if __name__ == '__main__':
 
     logging.basicConfig(level=logging.DEBUG)
     logger = logging.getLogger("asyncio")
-
-
-    async def request_handler(conn):
-        req_bytes = await main_loop.sock_recv(conn, 1024)
-        if req_bytes:
-            request = Request(*parse_request(req_bytes))
-            logger.debug(f'request: {request.method} {request.url}  {request.params}')
-            if request.url in routes:
-                body, status = await routes[request.url](request.method, request.params)
-                logger.debug(f'response: {body} {status}')
-            else:
-                status = 404
-                body = ''
-            response = make_response(body, status)
-            await main_loop.sock_sendall(conn, response)
-        conn.close()
-
-
-    async def http_server(sock, loop):
-        logger.debug('converter server started.....')
-        while True:
-            conn, addr = await loop.sock_accept(sock)
-            loop.create_task(request_handler(conn))
-
 
     try:
         main_loop.run_until_complete(http_server(server_socket, main_loop))
