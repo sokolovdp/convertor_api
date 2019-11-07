@@ -1,41 +1,40 @@
-import os
-
 from sqlalchemy import create_engine
 from sqlalchemy.exc import DBAPIError, IntegrityError
 
 import tables
+import convertor_config
 
 initial_xrates = [
     {
-        'from_curr': 'USD',
-        'to_curr': 'RUB',
-        'rate': 63.70,
-        'valid': True
+        "from_curr": "USD",
+        "to_curr": "RUB",
+        "rate": 63.70,
+        "valid": True
     },
     {
-        'from_curr': 'RUB',
-        'to_curr': 'USD',
-        'rate': 0.016,
-        'valid': True
+        "from_curr": "RUB",
+        "to_curr": "USD",
+        "rate": 0.016,
+        "valid": True
 
     },
     {
-        'from_curr': 'EUR',
-        'to_curr': 'RUB',
-        'rate': 70.54,
-        'valid': True
+        "from_curr": "EUR",
+        "to_curr": "RUB",
+        "rate": 70.54,
+        "valid": True
     },
     {
-        'from_curr': 'RUB',
-        'to_curr': 'EUR',
-        'rate': 0.014,
-        'valid': True
+        "from_curr": "RUB",
+        "to_curr": "EUR",
+        "rate": 0.014,
+        "valid": True
 
     }
 ]
 
 if __name__ == '__main__':
-    database_url = tables.DATABASE_URL
+    database_url = convertor_config.DATABASE_URL
 
     print(f'creating xrates tables, database url="{database_url}" ...')
 

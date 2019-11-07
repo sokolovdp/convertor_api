@@ -6,6 +6,8 @@ from databases import Database
 from tables import xrates
 import convertor_config
 
+GET_QUERY = "SELECT xrates.rate, xrates.valid FROM xrates WHERE xrates.from_curr=:v1 AND xrates.to_curr=:v2"
+
 logger = logging.getLogger("asyncio")
 database = Database(convertor_config.DATABASE_URL)
 
@@ -20,33 +22,45 @@ async def connect_db():
 
 
 async def database_post(method, params):
-    logger.debug(f'converter view {method}')
-    result = {'result': 3700.24}
-    return json.dumps(result), 200
+    status = 200
+    if method == 'POST':
+        try:
+            merge = int(params['merge'])
+        except (KeyError, ValueError):
+            result = error_result('missing mandatory param merge, or it has invalid value, allowed (0,1)')
+            status = 400
+        else:
+            result = {'params': params, 'merge': merge}
+
+    else:
+        result = error_result(f'method {method} not allowed')
+        status = 405
+
+    return json.dumps(result), status
 
 
 async def convert_get(method, params):
     status = 200
     if method == 'GET':
-        logger.debug(f'database view {method}')
-        from_curr = params.get('from')
-        to_curr = params.get('to')
-        from_amount = params.get('amount')
-        if not all([from_amount, from_curr, to_curr]):
-            result = error_result('missing mandatory query param(s)')
+        try:
+            from_curr = params['from']
+            to_curr = params['to']
+            from_amount = float(params['amount'])
+        except (KeyError, ValueError):
+            result = error_result('missing mandatory param(s) or invalid amount value')
             status = 400
         else:
-            query = xrates.select().where(xrates.c.from_curr == from_curr).where(xrates.c.to_curr == to_curr)
-            xrate = await database.fetch_one(query)
+            xrate = await database.fetch_one(query=GET_QUERY, values={'v1': from_curr, 'v2': to_curr})
             if not xrate:
                 result = error_result(f'unknown currency pair')
                 status = 400
-            elif not xrate.get('valid'):
+            elif not xrate['valid']:
                 result = error_result(f'no valid rate for the currency pair')
                 status = 400
             else:
-                rate = xrate.get('rate')
-                result = {'rate': rate}
+                rate = xrate['rate']
+                to_amount = from_amount * rate
+                result = {'to_amount': f'{to_amount:.2f}'}
     else:
         result = error_result(f'method {method} not allowed')
         status = 405

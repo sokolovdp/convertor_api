@@ -46,14 +46,17 @@ def parse_request(request: bytes) -> tuple:
 async def request_handler(conn):
     req_bytes = await main_loop.sock_recv(conn, convertor_config.MAX_REQUEST_LENGTH)
     if req_bytes:
-        request = Request(*parse_request(req_bytes))
-        logger.debug(f'request: {request.method} {request.url}  {request.params}')
         try:
+            request = Request(*parse_request(req_bytes))
+            logger.debug(f'request: {request.method} {request.url}  {request.params}')
             body, status = await api.routes[request.url](request.method, request.params)
             logger.debug(f'response: {body} {status}')
         except KeyError:
             status = 404
-            body = ''
+            body = '{"error": "unknown api path"}'
+        except (ValueError, TypeError):
+            status = 400
+            body = '{"error": "invalid request params"}'
         response = make_response(body, status)
         await main_loop.sock_sendall(conn, response)
     conn.close()
