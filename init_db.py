@@ -18,7 +18,7 @@ if __name__ == '__main__':
         db.xrates.create(db_connection)
     except DBAPIError as db_error:
         if db_error.orig.pgcode == DUPLICATE_TABLE:
-            print('\nforum tables already exists!\n')
+            print('\nxrate table already exists!\n')
             exit(0)
         else:
             raise db_error
@@ -26,4 +26,4 @@ if __name__ == '__main__':
     query = db.xrates.insert()
     db_connection.execute(query, )
 
-    print('\nforum api tables, and admin user created\n')
+    print('\nxrate table created and populated with initial data\n')
