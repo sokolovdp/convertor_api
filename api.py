@@ -16,7 +16,7 @@ async def convert_get(method, params):
     return json.dumps(result), 200
 
 
-routes = {
+routes = {  # simple routes (no url params)
     '/convert': convert_get,
     '/database': database_post
 }

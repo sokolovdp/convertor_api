@@ -23,7 +23,7 @@ def make_response(json_string, status=200) -> bytes:
 
 def parse_query_string(query_str: str) -> dict:
     query_params = {}
-    for param in query_str.split('&'):
+    for param in query_str.split('&'):  # expected params with unique names!
         key, value = param.split('=')
         query_params[key] = value
     return query_params
