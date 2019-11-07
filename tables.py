@@ -19,4 +19,3 @@ def connect_database():
 
     Db = Database(DATABASE_URL)
     Db.connect()
-
