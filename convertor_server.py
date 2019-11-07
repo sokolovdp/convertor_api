@@ -2,7 +2,6 @@ import json
 from collections import namedtuple
 import asyncio
 import socket
-import signal
 import logging
 
 import api
