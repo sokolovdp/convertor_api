@@ -47,10 +47,10 @@ async def request_handler(conn):
     if req_bytes:
         request = Request(*parse_request(req_bytes))
         logger.debug(f'request: {request.method} {request.url}  {request.params}')
-        if request.url in routes:
+        try:
             body, status = await routes[request.url](request.method, request.params)
             logger.debug(f'response: {body} {status}')
-        else:
+        except KeyError:
             status = 404
             body = ''
         response = make_response(body, status)
