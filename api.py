@@ -1,13 +1,17 @@
 import json
 import logging
 
-import tables
+from databases import Database
+
+from tables import xrates
+import convertor_config
 
 logger = logging.getLogger("asyncio")
+database = Database(convertor_config.DATABASE_URL)
 
 
-def start_api():
-    tables.connect_database()
+async def connect_db():
+    await database.connect()
 
 
 async def database_post(method, params):
@@ -29,8 +33,9 @@ async def convert_get(method, params):
             result = {'error': error}
             status = 400
         else:
-
-            result = {'converted': 3}
+            query = xrates.select().where(xrates.c.from_curr == from_curr).where(xrates.c.to_curr == to_curr)
+            xrate = await database.fetch_one(query)
+            result = {'type': str(type(xrate))}
     else:
         error = f'invalid method {method}'
         logger.info(error)

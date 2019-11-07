@@ -60,6 +60,7 @@ async def request_handler(conn):
 
 
 async def http_server(sock, loop):
+    await api.connect_db()
     logger.debug('converter server started.....')
     while True:
         conn, addr = await loop.sock_accept(sock)
@@ -78,8 +79,6 @@ if __name__ == '__main__':
 
     logging.basicConfig(level=convertor_config.LOGGING_LEVEL)
     logger = logging.getLogger("asyncio")
-
-    api.start_api()
 
     try:
         main_loop.run_until_complete(http_server(server_socket, main_loop))
