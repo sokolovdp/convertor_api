@@ -1,33 +1,33 @@
 import os
 
 from sqlalchemy import create_engine
-from sqlalchemy.exc import DBAPIError
+from sqlalchemy.exc import DBAPIError, IntegrityError
 
 import tables
 
 initial_xrates = [
     {
-        'from_currency': 'USD',
-        'to_currency': 'RUB',
+        'from_curr': 'USD',
+        'to_curr': 'RUB',
         'rate': 63.70,
         'valid': True
     },
     {
-        'from_currency': 'RUB',
-        'to_currency': 'USD',
+        'from_curr': 'RUB',
+        'to_curr': 'USD',
         'rate': 0.016,
         'valid': True
 
     },
     {
-        'from_currency': 'EUR',
-        'to_currency': 'RUB',
+        'from_curr': 'EUR',
+        'to_curr': 'RUB',
         'rate': 70.54,
         'valid': True
     },
     {
-        'from_currency': 'RUB',
-        'to_currency': 'EUR',
+        'from_curr': 'RUB',
+        'to_curr': 'EUR',
         'rate': 0.014,
         'valid': True
 
@@ -44,11 +44,17 @@ if __name__ == '__main__':
     try:
         tables.xrates.create(db_connection)
         # create unique multicolumn index
-        db_connection.execute('CREATE UNIQUE INDEX from_to_idx ON xrates (from_currency, to_currency)')
+        db_connection.execute('CREATE UNIQUE INDEX from_to_idx ON xrates (from_curr, to_curr)')
     except DBAPIError as db_error:
-        print(f'\nDB error code: {db_error.orig.pgcode}\n')
+        if db_error.orig.pgcode == '42P07':
+            print(f'\nxrates table already exists!\n')
+        else:
+            print(f'\nDB error code: {db_error.orig.pgcode}\n')
 
-    query = tables.xrates.insert()
-    db_connection.execute(query, initial_xrates)
+    try:
+        query = tables.xrates.insert()
+        db_connection.execute(query, initial_xrates)
+    except IntegrityError:
+        print(f'\nxrates data already filled in!\n')
 
     print('\nxrate table created and populated with initial data\n')
