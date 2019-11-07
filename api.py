@@ -6,7 +6,9 @@ from databases import Database
 from tables import xrates
 import convertor_config
 
-GET_QUERY = "SELECT xrates.rate, xrates.valid FROM xrates WHERE xrates.from_curr=:v1 AND xrates.to_curr=:v2"
+GET_RATE_QUERY = "SELECT xrates.rate, xrates.valid FROM xrates " \
+                 "WHERE xrates.from_curr=:v1 AND xrates.to_curr=:v2"
+INVALIDATE_QUERY = "UPDATE xrates SET valid=false"
 
 logger = logging.getLogger("asyncio")
 database = Database(convertor_config.DATABASE_URL)
@@ -34,7 +36,10 @@ async def database_post(method, params):
             result = error_result('missing the query param: merge, or it has invalid value, allowed (0,1)')
             status = 400
         else:
-            result = {'params': params}
+            # transaction !!!!
+            if not merge:  # invalidate all rates in the table
+                await database.execute(query=INVALIDATE_QUERY)
+            result = {"result": "update done"}
     else:
         result = error_result(f'method {method} not allowed')
         status = 405
@@ -53,12 +58,12 @@ async def convert_get(method, params):
             result = error_result('missing mandatory param(s) or invalid amount value')
             status = 400
         else:
-            xrate = await database.fetch_one(query=GET_QUERY, values={'v1': from_curr, 'v2': to_curr})
+            xrate = await database.fetch_one(query=GET_RATE_QUERY, values={'v1': from_curr, 'v2': to_curr})
             if not xrate:
                 result = error_result(f'unknown currency pair')
                 status = 400
             elif not xrate['valid']:
-                result = error_result(f'no valid rate for the currency pair')
+                result = error_result(f'no valid rate for this currency pair')
                 status = 400
             else:
                 rate = xrate['rate']
