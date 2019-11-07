@@ -41,18 +41,23 @@ async def database_post(method, params):
             result = error_result('missing the query param: merge, or it has invalid value, allowed (0,1)')
             status = 400
         else:
-            # todo transaction !!!!
-            if not merge:  # invalidate all rates in the table
-                await database.execute(query=INVALIDATE_ALL_RATES)
+            transaction = await database.transaction()
             try:
+                if not merge:  # invalidate all rates in the table
+                    await database.execute(query=INVALIDATE_ALL_RATES)
                 await database.execute_many(query=UPSERT_RATE, values=rates)
             except (ArgumentError, KeyError):
+                await transaction.rollback()
                 result = error_result('invalid rates data')
                 status = 400
+            except Exception as e:
+                await transaction.rollback()
+                result = error_result(f'database error: {repr(e)}')
+                status = 500
             else:
+                await transaction.commit()
                 result = {'result': "rates updated"}
                 status = 200
-            # todo commit transaction
     else:
         result = error_result(f'method {method} not allowed')
         status = 405
