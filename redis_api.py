@@ -1,6 +1,6 @@
 import logging
 import convertor_config
-
+import json
 import asyncio_redis
 
 logger = logging.getLogger("asyncio")
@@ -10,17 +10,22 @@ redis_connection = None
 async def connect_db():
     global redis_connection
 
-    redis_connection = await asyncio_redis.Pool.create(
+    # redis_connection = await asyncio_redis.Pool.create(
+    #     host=convertor_config.DATABASE_HOST,
+    #     port=convertor_config.DATABASE_PORT,
+    #     poolsize=convertor_config.REDIS_POOL_SIZE
+    # )
+
+    redis_connection = await asyncio_redis.Connection.create(
         host=convertor_config.DATABASE_HOST,
-        port=convertor_config.DATABASE_PORT,
-        poolsize=convertor_config.REDIS_POOL_SIZE
+        port=6379
     )
 
 
 async def disconnect_db():
     global redis_connection
 
-    await redis_connection.close()
+    redis_connection.close()
 
 
 def error_result(message):
@@ -40,15 +45,19 @@ async def database_post(method, params):
         result = error_result('missing the query param: merge, or it has invalid value, allowed (0,1)')
         return result, 400
 
+    if not merge:  # invalidate all rates
+        pass
+    data_for_redis = {}
+    for rate in rates:
+        key = rate['from_curr'][:3].upper() + rate['to_curr'][:3].upper()
+        value = {'valid': 1, 'rate': float(rate['rate'])}
+        data_for_redis[key] = json.dumps(value)
+
     transaction = await redis_connection.multi()
     try:
-        # Run commands in transaction (they return future objects)
-        # f1 = await transaction.set('key', 'value')
-        # f2 = await transaction.set('another_key', 'another_value')
-        raise ZeroDivisionError
-        pass
+        for key, value in data_for_redis.items():
+            await transaction.set(key, value)
     except Exception as e:
-        await transaction.rollback()
         result = error_result(f'redis error: {repr(e)}')
         status = 500
     else:
@@ -61,4 +70,32 @@ async def database_post(method, params):
 
 
 async def convert_get(method, params):
-    return
+    if method != 'GET':
+        result = error_result(f'method {method} not allowed')
+        return result, 405
+
+    try:
+        from_curr = params['from'][:3].upper()
+        to_curr = params['to'][:3].upper()
+        from_amount = float(params['amount'])
+    except (KeyError, ValueError):
+        result = error_result('missing mandatory param(s) or invalid amount value')
+        return result, 400
+
+    key = from_curr + to_curr
+    json_string = await redis_connection.get(key)
+    if not json_string:
+        result = error_result(f'unknown currency pair')
+        return result, 400
+    value = json.loads(json_string)
+    rate = value.get('rate')
+    valid = value.get('valid')
+    if not valid:
+        result = error_result(f'no valid rate for this currency pair')
+        status = 400
+    else:
+        to_amount = from_amount * rate
+        result = {'to_amount': f'{to_amount:.2f}'}
+        status = 200
+
+    return result, status
