@@ -32,6 +32,7 @@ async def database_post(method, params):
     if method == 'POST':
         try:
             merge = int(params['merge'])
+            rates = params['rates']
         except (KeyError, ValueError):
             result = error_result('missing the query param: merge, or it has invalid value, allowed (0,1)')
             status = 400
@@ -39,7 +40,8 @@ async def database_post(method, params):
             # transaction !!!!
             if not merge:  # invalidate all rates in the table
                 await database.execute(query=INVALIDATE_ALL_RATES)
-            result = {"result": "update done"}
+            for rate in rates:
+                result = {"result": rate['rate']}
     else:
         result = error_result(f'method {method} not allowed')
         status = 405
