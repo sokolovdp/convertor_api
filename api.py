@@ -10,6 +10,11 @@ logger = logging.getLogger("asyncio")
 database = Database(convertor_config.DATABASE_URL)
 
 
+def error_result(message):
+    logger.info(message)
+    return {'error': message}
+
+
 async def connect_db():
     await database.connect()
 
@@ -28,18 +33,22 @@ async def convert_get(method, params):
         to_curr = params.get('to')
         from_amount = params.get('amount')
         if not all([from_amount, from_curr, to_curr]):
-            error = 'missing mandatory query param(s)'
-            logger.info(error)
-            result = {'error': error}
+            result = error_result('missing mandatory query param(s)')
             status = 400
         else:
             query = xrates.select().where(xrates.c.from_curr == from_curr).where(xrates.c.to_curr == to_curr)
             xrate = await database.fetch_one(query)
-            result = {'type': str(type(xrate))}
+            if not xrate:
+                result = error_result(f'unknown currency pair')
+                status = 400
+            elif not xrate.get('valid'):
+                result = error_result(f'no valid rate for the currency pair')
+                status = 400
+            else:
+                rate = xrate.get('rate')
+                result = {'rate': rate}
     else:
-        error = f'invalid method {method}'
-        logger.info(error)
-        result = {'error': error}
+        result = error_result(f'method {method} not allowed')
         status = 405
     return json.dumps(result), status
 
