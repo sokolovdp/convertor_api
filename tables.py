@@ -3,6 +3,7 @@ from databases import Database
 from convertor_config import DATABASE_URL
 
 metadata = MetaData()
+Db = None
 
 xrates = Table(
     'xrates', metadata,
@@ -14,6 +15,8 @@ xrates = Table(
 
 
 def connect_database():
-    db = Database(DATABASE_URL)
-    db.connect()
-    return db
+    global Db
+
+    Db = Database(DATABASE_URL)
+    Db.connect()
+

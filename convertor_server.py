@@ -4,7 +4,8 @@ import asyncio
 import socket
 import logging
 
-from api import routes
+import api
+import convertor_config
 
 Request = namedtuple('Request', 'method url params')
 
@@ -43,12 +44,12 @@ def parse_request(request: bytes) -> tuple:
 
 
 async def request_handler(conn):
-    req_bytes = await main_loop.sock_recv(conn, 1024)
+    req_bytes = await main_loop.sock_recv(conn, convertor_config.MAX_REQUEST_LENGTH)
     if req_bytes:
         request = Request(*parse_request(req_bytes))
         logger.debug(f'request: {request.method} {request.url}  {request.params}')
         try:
-            body, status = await routes[request.url](request.method, request.params)
+            body, status = await api.routes[request.url](request.method, request.params)
             logger.debug(f'response: {body} {status}')
         except KeyError:
             status = 404
@@ -66,19 +67,19 @@ async def http_server(sock, loop):
 
 
 if __name__ == '__main__':
-    host = '0.0.0.0'
-    port = 8888
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     server_socket.setblocking(False)
-    server_socket.bind((host, port))
+    server_socket.bind((convertor_config.SERVER_HOST, convertor_config.SERVER_PORT))
     server_socket.listen(10)
 
     main_loop = asyncio.get_event_loop()
-    main_loop.set_debug(enabled=True)
+    main_loop.set_debug(enabled=convertor_config.DEBUG_MODE)
 
-    logging.basicConfig(level=logging.DEBUG)
+    logging.basicConfig(level=convertor_config.LOGGING_LEVEL)
     logger = logging.getLogger("asyncio")
+
+    api.start_api()
 
     try:
         main_loop.run_until_complete(http_server(server_socket, main_loop))

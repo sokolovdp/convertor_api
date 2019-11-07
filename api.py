@@ -1,7 +1,13 @@
 import json
 import logging
 
+import tables
+
 logger = logging.getLogger("asyncio")
+
+
+def start_api():
+    tables.connect_database()
 
 
 async def database_post(method, params):
