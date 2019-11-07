@@ -4,7 +4,6 @@ import logging
 from databases import Database
 from sqlalchemy.exc import ArgumentError
 
-from tables import xrates
 import convertor_config
 
 GET_RATE = "SELECT xrates.rate, xrates.valid FROM xrates " \
