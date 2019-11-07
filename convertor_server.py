@@ -38,7 +38,7 @@ def parse_request(request: bytes) -> tuple:
         url, query_params = url.split('?', 1)
         params.update(parse_query_string(query_params))
     if body:
-        body_params = json.loads(body)
+        body_params = json.loads(body)  # must be a dict, else error!
         params.update(body_params)
     return method, url, params
 

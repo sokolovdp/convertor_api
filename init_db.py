@@ -16,7 +16,6 @@ initial_xrates = [
         "to_curr": "USD",
         "rate": 0.016,
         "valid": True
-
     },
     {
         "from_curr": "EUR",
@@ -29,7 +28,6 @@ initial_xrates = [
         "to_curr": "EUR",
         "rate": 0.014,
         "valid": True
-
     }
 ]
 
