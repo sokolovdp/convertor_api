@@ -32,7 +32,7 @@ initial_xrates = [
 ]
 
 if __name__ == '__main__':
-    database_url = convertor_config.DATABASE_URL
+    database_url = convertor_config.DATABASE_HOST
 
     print(f'creating xrates tables, database url="{database_url}" ...')
 

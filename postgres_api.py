@@ -13,7 +13,7 @@ UPSERT_RATE = "INSERT INTO xrates (from_curr, to_curr, rate, valid) " \
               "DO UPDATE SET (rate, valid) = (:rate, true)"
 
 logger = logging.getLogger("asyncio")
-database = Database(convertor_config.DATABASE_URL)
+database = Database(convertor_config.DATABASE_HOST)
 
 
 def error_result(message):

@@ -2,3 +2,4 @@ sqlalchemy>=1.3.10
 databases
 asyncpg
 psycopg2-binary
+asyncio_redis
