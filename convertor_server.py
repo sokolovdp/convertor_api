@@ -64,6 +64,9 @@ async def request_handler(main_loop, conn):
         except (ValueError, TypeError):
             status = 400
             body = '{"error": "invalid request params"}'
+        except Exception as e:
+            status = 500
+            body = '{"error": "' + repr(e) + '"}'
         response = make_response(body, status)
         await main_loop.sock_sendall(conn, response)
     conn.close()

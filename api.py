@@ -35,7 +35,6 @@ async def database_post(method, params):
             status = 400
         else:
             result = {'params': params}
-
     else:
         result = error_result(f'method {method} not allowed')
         status = 405
