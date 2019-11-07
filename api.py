@@ -6,9 +6,9 @@ from databases import Database
 from tables import xrates
 import convertor_config
 
-GET_RATE_QUERY = "SELECT xrates.rate, xrates.valid FROM xrates " \
-                 "WHERE xrates.from_curr=:v1 AND xrates.to_curr=:v2"
-INVALIDATE_QUERY = "UPDATE xrates SET valid=false"
+GET_RATE = "SELECT xrates.rate, xrates.valid FROM xrates WHERE xrates.from_curr=:v1 AND xrates.to_curr=:v2"
+INVALIDATE_ALL_RATES = "UPDATE xrates SET valid=false"
+
 
 logger = logging.getLogger("asyncio")
 database = Database(convertor_config.DATABASE_URL)
@@ -38,7 +38,7 @@ async def database_post(method, params):
         else:
             # transaction !!!!
             if not merge:  # invalidate all rates in the table
-                await database.execute(query=INVALIDATE_QUERY)
+                await database.execute(query=INVALIDATE_ALL_RATES)
             result = {"result": "update done"}
     else:
         result = error_result(f'method {method} not allowed')
@@ -58,7 +58,7 @@ async def convert_get(method, params):
             result = error_result('missing mandatory param(s) or invalid amount value')
             status = 400
         else:
-            xrate = await database.fetch_one(query=GET_RATE_QUERY, values={'v1': from_curr, 'v2': to_curr})
+            xrate = await database.fetch_one(query=GET_RATE, values={'v1': from_curr, 'v2': to_curr})
             if not xrate:
                 result = error_result(f'unknown currency pair')
                 status = 400
