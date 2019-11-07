@@ -6,9 +6,9 @@ from databases import Database
 from tables import xrates
 import convertor_config
 
-GET_RATE = "SELECT xrates.rate, xrates.valid FROM xrates WHERE xrates.from_curr=:v1 AND xrates.to_curr=:v2"
+GET_RATE = "SELECT xrates.rate, xrates.valid FROM xrates " \
+           "WHERE xrates.from_curr=:from_curr AND xrates.to_curr=:to_curr"
 INVALIDATE_ALL_RATES = "UPDATE xrates SET valid=false"
-
 UPSERT_RATE = "INSERT INTO xrates (from_curr, to_curr, rate, valid) " \
               "VALUES (:from_curr, :to_curr, :rate, true) " \
               "ON CONFLICT (from_curr, to_curr) " \
@@ -65,7 +65,10 @@ async def convert_get(method, params):
             result = error_result('missing mandatory param(s) or invalid amount value')
             status = 400
         else:
-            xrate = await database.fetch_one(query=GET_RATE, values={'v1': from_curr, 'v2': to_curr})
+            xrate = await database.fetch_one(
+                query=GET_RATE,
+                values={'from_curr': from_curr, 'to_curr': to_curr}
+            )
             if not xrate:
                 result = error_result(f'unknown currency pair')
                 status = 400
