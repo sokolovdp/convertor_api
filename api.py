@@ -2,6 +2,7 @@ import json
 import logging
 
 from databases import Database
+from sqlalchemy.exc import ArgumentError
 
 from tables import xrates
 import convertor_config
@@ -44,10 +45,15 @@ async def database_post(method, params):
             # todo transaction !!!!
             if not merge:  # invalidate all rates in the table
                 await database.execute(query=INVALIDATE_ALL_RATES)
-            await database.execute_many(query=UPSERT_RATE, values=rates)
+            try:
+                await database.execute_many(query=UPSERT_RATE, values=rates)
+            except (ArgumentError, KeyError):
+                result = error_result('invalid rates data')
+                status = 400
+            else:
+                result = {'result': "rates updated"}
+                status = 200
             # todo commit transaction
-            result = {'result': "rates updated"}
-            status = 200
     else:
         result = error_result(f'method {method} not allowed')
         status = 405
