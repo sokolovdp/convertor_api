@@ -12,4 +12,4 @@ SERVER_PORT = 8888
 
 MAX_REQUEST_LENGTH = 1024  # for sock_recv
 
-DATABASE_URL = 'postgresql://postgres:postgres@localhost'
+DATABASE_URL = os.getenv('DATABASE_URL', 'postgresql://postgres:postgres@localhost')
