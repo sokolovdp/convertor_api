@@ -9,6 +9,11 @@ import convertor_config
 GET_RATE = "SELECT xrates.rate, xrates.valid FROM xrates WHERE xrates.from_curr=:v1 AND xrates.to_curr=:v2"
 INVALIDATE_ALL_RATES = "UPDATE xrates SET valid=false"
 
+UPSERT_RATE = "INSERT INTO xrates (from_curr, to_curr, rate, valid) " \
+              "VALUES (:from_curr, :to_curr, :rate, true) " \
+              "ON CONFLICT (from_curr, to_curr) " \
+              "DO UPDATE SET (rate, valid) = (:rate, true)"
+
 
 logger = logging.getLogger("asyncio")
 database = Database(convertor_config.DATABASE_URL)
@@ -28,20 +33,21 @@ async def disconnect_db():
 
 
 async def database_post(method, params):
-    status = 200
     if method == 'POST':
         try:
-            merge = int(params['merge'])
+            merge = bool(params['merge'])
             rates = params['rates']
         except (KeyError, ValueError):
             result = error_result('missing the query param: merge, or it has invalid value, allowed (0,1)')
             status = 400
         else:
-            # transaction !!!!
+            # todo transaction !!!!
             if not merge:  # invalidate all rates in the table
                 await database.execute(query=INVALIDATE_ALL_RATES)
-            for rate in rates:
-                result = {"result": rate['rate']}
+            await database.execute_many(query=UPSERT_RATE, values=rates)
+            # todo commit transaction
+            result = {'result': "rates updated"}
+            status = 200
     else:
         result = error_result(f'method {method} not allowed')
         status = 405
@@ -50,11 +56,10 @@ async def database_post(method, params):
 
 
 async def convert_get(method, params):
-    status = 200
     if method == 'GET':
         try:
-            from_curr = params['from']
-            to_curr = params['to']
+            from_curr = params['from'].upper()
+            to_curr = params['to'].upper()
             from_amount = float(params['amount'])
         except (KeyError, ValueError):
             result = error_result('missing mandatory param(s) or invalid amount value')
@@ -71,6 +76,7 @@ async def convert_get(method, params):
                 rate = xrate['rate']
                 to_amount = from_amount * rate
                 result = {'to_amount': f'{to_amount:.2f}'}
+                status = 200
     else:
         result = error_result(f'method {method} not allowed')
         status = 405
