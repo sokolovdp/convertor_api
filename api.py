@@ -1,4 +1,3 @@
-import json
 import logging
 
 from databases import Database
@@ -13,7 +12,6 @@ UPSERT_RATE = "INSERT INTO xrates (from_curr, to_curr, rate, valid) " \
               "VALUES (:from_curr, :to_curr, :rate, true) " \
               "ON CONFLICT (from_curr, to_curr) " \
               "DO UPDATE SET (rate, valid) = (:rate, true)"
-
 
 logger = logging.getLogger("asyncio")
 database = Database(convertor_config.DATABASE_URL)
@@ -62,7 +60,7 @@ async def database_post(method, params):
         result = error_result(f'method {method} not allowed')
         status = 405
 
-    return json.dumps(result), status
+    return result, status
 
 
 async def convert_get(method, params):
@@ -93,7 +91,7 @@ async def convert_get(method, params):
     else:
         result = error_result(f'method {method} not allowed')
         status = 405
-    return json.dumps(result), status
+    return result, status
 
 
 routes = {  # simple routes (no url params)

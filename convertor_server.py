@@ -23,7 +23,8 @@ def make_header(status: int) -> bytes:
     return header.encode()
 
 
-def make_response(json_string, status=200) -> bytes:
+def make_response(result: dict, status=200) -> bytes:
+    json_string = json.dumps(result)
     header = make_header(status)
     body = json_string.encode() if json_string else b''
     return header + body
@@ -56,18 +57,17 @@ async def request_handler(main_loop, conn):
         try:
             request = Request(*parse_request(req_bytes))
             logger.debug(f'request: {request.method} {request.url}  {request.params}')
-            body, status = await api.routes[request.url](request.method, request.params)
-            logger.debug(f'response: {body} {status}')
+            result, status = await api.routes[request.url](request.method, request.params)
         except KeyError:
             status = 404
-            body = '{"error": "unknown api path"}'
+            result = {"error": "unknown api path"}
         except (ValueError, TypeError):
             status = 400
-            body = '{"error": "invalid request params"}'
+            result = {"error": "invalid request params"}
         except Exception as e:
             status = 500
-            body = '{"error": "server error: ' + repr(e) + '"}'
-        response = make_response(body, status)
+            result = '{"error": "server error: ' + repr(e) + '"}'
+        response = make_response(result, status)
         await main_loop.sock_sendall(conn, response)
     conn.close()
 
