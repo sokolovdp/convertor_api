@@ -16,17 +16,17 @@ logger = logging.getLogger("asyncio")
 database = Database(convertor_config.DATABASE_HOST)
 
 
-def error_result(message):
-    logger.info(message)
-    return {'error': message}
-
-
 async def connect_db():
     await database.connect()
 
 
 async def disconnect_db():
     await database.disconnect()
+
+
+def error_result(message):
+    logger.info(message)
+    return {'error': message}
 
 
 async def database_post(method, params):
