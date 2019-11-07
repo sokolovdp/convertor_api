@@ -21,16 +21,20 @@ async def connect_db():
     await database.connect()
 
 
+async def disconnect_db():
+    await database.disconnect()
+
+
 async def database_post(method, params):
     status = 200
     if method == 'POST':
         try:
             merge = int(params['merge'])
         except (KeyError, ValueError):
-            result = error_result('missing mandatory param merge, or it has invalid value, allowed (0,1)')
+            result = error_result('missing the query param: merge, or it has invalid value, allowed (0,1)')
             status = 400
         else:
-            result = {'params': params, 'merge': merge}
+            result = {'params': params}
 
     else:
         result = error_result(f'method {method} not allowed')

@@ -9,6 +9,13 @@ import convertor_config
 
 Request = namedtuple('Request', 'method url params')
 
+logging.basicConfig(
+    level=convertor_config.LOGGING_LEVEL,
+    format=convertor_config.LOGGING_FORMAT,
+    datefmt=convertor_config.LOGGING_DATE_FORMAT
+)
+logger = logging.getLogger("asyncio")
+
 
 def make_header(status: int) -> bytes:
     msg = 'OK' if status in (200, 201) else 'ERROR'
@@ -43,7 +50,7 @@ def parse_request(request: bytes) -> tuple:
     return method, url, params
 
 
-async def request_handler(conn):
+async def request_handler(main_loop, conn):
     req_bytes = await main_loop.sock_recv(conn, convertor_config.MAX_REQUEST_LENGTH)
     if req_bytes:
         try:
@@ -67,10 +74,10 @@ async def http_server(sock, loop):
     logger.debug('converter server started.....')
     while True:
         conn, addr = await loop.sock_accept(sock)
-        loop.create_task(request_handler(conn))
+        loop.create_task(request_handler(loop, conn))
 
 
-if __name__ == '__main__':
+def main():
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     server_socket.setblocking(False)
@@ -80,9 +87,6 @@ if __name__ == '__main__':
     main_loop = asyncio.get_event_loop()
     main_loop.set_debug(enabled=convertor_config.DEBUG_MODE)
 
-    logging.basicConfig(level=convertor_config.LOGGING_LEVEL)
-    logger = logging.getLogger("asyncio")
-
     try:
         main_loop.run_until_complete(http_server(server_socket, main_loop))
     except KeyboardInterrupt:
@@ -90,3 +94,7 @@ if __name__ == '__main__':
     finally:
         main_loop.close()
         server_socket.close()
+
+
+if __name__ == "__main__":
+    main()
