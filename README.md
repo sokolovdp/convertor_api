@@ -2,6 +2,11 @@
 Простой демо веб-сервис на asyncio, который предоставляет API для конвертации валют. Данные можно хранить в Redis или Postgres (для этого требуется перекомпиляция кода, и предварительный запуск программы init_postgres для инициализации базы). 
 Код разработан для демо целей и предполагет локальный запуск.
 
+## To start server
+```text
+python3 -m convertor_server.py
+```
+
 ## Должны работать следующие локейшены:
 
 - GET /convert?from=RUR&to=USD&amount=42: перевести amount из валюты from в валюту to. Ответ в JSON.
@@ -59,3 +64,6 @@
 }
 ```
 
+## Postman тесты
+
+https://www.getpostman.com/collections/9db81bc74495bffb357e
