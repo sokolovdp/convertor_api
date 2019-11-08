@@ -46,7 +46,7 @@ def parse_request(request: bytes) -> tuple:
         url, query_params = url.split('?', 1)
         params.update(parse_query_string(query_params))
     if body:
-        body_params = json.loads(body)  # must be a dict, else error!
+        body_params = json.loads(body)  # request body must be a dict, else error!
         params.update(body_params)
     return method, url, params
 
@@ -60,13 +60,13 @@ async def request_handler(main_loop, conn):
             result, status = await api.routes[request.url](request.method, request.params)
         except KeyError:
             status = 404
-            result = {"error": "unknown api path"}
+            result = {"error": "unknown api route url"}
         except (ValueError, TypeError):
             status = 400
             result = {"error": "invalid request params"}
         except Exception as e:
             status = 500
-            result = {"error": f"server error: '{str(e)}'"}
+            result = {"error": f"server error: {str(e)}"}
         response = make_response(result, status)
         await main_loop.sock_sendall(conn, response)
     conn.close()
