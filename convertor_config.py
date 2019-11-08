@@ -17,7 +17,6 @@ if DATABASE_TYPE == 'redis':
     DATABASE_HOST = os.getenv('DATABASE_HOST', 'localhost')
     DATABASE_PORT = os.getenv('DATABASE_PORT', 6379)
     DATABASE_NAME = os.getenv('DATABASE_NAME', 'converter_rates')
-    REDIS_POOL_SIZE = 10
 else:
     DATABASE_HOST = os.getenv('DATABASE_HOST', 'postgresql://postgres:postgres@localhost')
     DATABASE_NAME = os.getenv('DATABASE_NAME', 'postgresql')
