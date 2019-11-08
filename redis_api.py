@@ -68,9 +68,9 @@ async def database_post(method, params):
         old_rates = dict()
         for key in keys_to_invalidate:
             json_string = await redis_connection.get(key)
-            value = Value(*json.loads(json_string))
-            value.valid = 0
-            old_rates[key] = json.dumps(value)
+            old_value = Value(*json.loads(json_string))
+            new_value = Value(rate=old_value.rate, valid=0)
+            old_rates[key] = json.dumps(new_value)
         try:
             await run_update_transaction(old_rates)
         except Exception as e:
