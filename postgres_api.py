@@ -37,7 +37,7 @@ async def database_post(method, params):
         merge = bool(params['merge'])
         rates = params['rates']
     except (KeyError, ValueError):
-        return error_result('invalid merge param value, allowed (0,1)'), 400
+        return error_result('invalid params value(s), merge allowed value (0,1)'), 400
 
     transaction = await database.transaction()
     try:
