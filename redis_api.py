@@ -28,7 +28,7 @@ def error_result(message):
     return {'error': message}
 
 
-async def get_all_keys():
+async def get_db_keys() -> set:
     keys = await redis_connection.keys('??????')
     all_keys = set()
     for key in keys:
@@ -37,60 +37,65 @@ async def get_all_keys():
     return all_keys
 
 
+async def run_update_transaction(data: dict):
+    transaction = await redis_connection.multi()
+    try:
+        for key, value in data.items():
+            await transaction.set(key, value)
+    except Exception:
+        raise
+    else:  # Commit transaction
+        await transaction.exec()
+
+
 async def database_post(method, params):
     if method not in ('POST', 'PUT', 'PATCH'):
-        result = error_result(f'method {method} not allowed')
-        return result, 405
+        return error_result(f'method {method} not allowed'), 405
 
     try:
         merge = int(params['merge'])
         rates = params['rates']
     except (KeyError, ValueError):
-        result = error_result('missing the query param: merge, or it has invalid value, allowed (0,1)')
-        return result, 400
+        return error_result('missing the query param: merge, or it has invalid value, allowed (0,1)'), 400
 
-    keys_in_db = await get_all_keys()
     new_rates = dict()
-    new_keys = set()
     for rate in rates:
         key = rate['from_curr'][:3].upper() + rate['to_curr'][:3].upper()
         value = {'valid': 1, 'rate': float(rate['rate'])}
         new_rates[key] = json.dumps(value)
-        new_keys.add(key)
 
-    if not merge:  # invalidate all rates
-        keys_to_invalidate = keys_in_db - new_keys
-        pass
+    if not merge:  # invalidate rates in db, which are not present in update request
+        db_keys = await get_db_keys()
+        keys_to_invalidate = db_keys - set(new_rates.keys())
+        old_rates = dict()
+        for key in keys_to_invalidate:
+            json_string = await redis_connection.get(key)
+            value = json.loads(json_string)
+            value['valid'] = 0
+            old_rates[key] = json.dumps(value)
+        try:
+            await run_update_transaction(old_rates)
+        except Exception as e:
+            return error_result(f'redis error: {repr(e)}'), 500
 
-
-    transaction = await redis_connection.multi()
-    try:
-        for key, value in new_rates.items():
-            await transaction.set(key, value)
+    try:  # update db with new rates
+        await run_update_transaction(new_rates)
     except Exception as e:
-        result = error_result(f'redis error: {repr(e)}')
-        status = 500
-    else:
-        # Commit transaction
-        await transaction.exec()
-        result = {'result': "rates updated"}
-        status = 200
+        return error_result(f'redis error: {repr(e)}'), 500
 
-    return result, status
+    return {'result': "rates updated"}, 200
 
 
 async def convert_get(method, params):
     if method != 'GET':
-        result = error_result(f'method {method} not allowed')
-        return result, 405
+        return error_result(f'method {method} not allowed'), 405
 
     try:
         from_curr = params['from'][:3].upper()
         to_curr = params['to'][:3].upper()
         from_amount = float(params['amount'])
     except (KeyError, ValueError):
-        result = error_result('missing mandatory param(s) or invalid amount value')
-        return result, 400
+        return error_result('missing mandatory param(s) or invalid amount value'), 400
 
     key = from_curr + to_curr
     json_string = await redis_connection.get(key)
@@ -101,11 +106,7 @@ async def convert_get(method, params):
     rate = value.get('rate')
     valid = value.get('valid')
     if not valid:
-        result = error_result(f'no valid rate for this currency pair')
-        status = 400
-    else:
-        to_amount = from_amount * rate
-        result = {'to_amount': f'{to_amount:.2f}'}
-        status = 200
+        return error_result(f'no valid rate for this currency pair'), 400
 
-    return result, status
+    to_amount = from_amount * rate
+    return {'to_amount': f'{to_amount:.2f}'}, 200
