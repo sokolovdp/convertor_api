@@ -31,12 +31,9 @@ def error_result(message):
 
 
 async def get_db_keys() -> set:
-    keys = await redis_connection.keys('??????')
-    all_keys = set()
-    for key in keys:
-        k = await key
-        all_keys.add(k)
-    return all_keys
+    cursor = await redis_connection.scan('??????')
+    keys = await cursor.fetchall()
+    return keys
 
 
 async def run_update_transaction(data: dict):
@@ -67,7 +64,7 @@ async def database_post(method, params):
 
     if not merge:  # invalidate rates in db, which are not present in update request
         db_keys = await get_db_keys()
-        keys_to_invalidate = db_keys - set(new_rates.keys())
+        keys_to_invalidate = set(db_keys) - set(new_rates.keys())
         old_rates = dict()
         for key in keys_to_invalidate:
             json_string = await redis_connection.get(key)
