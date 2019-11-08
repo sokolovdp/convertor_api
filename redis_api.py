@@ -1,10 +1,13 @@
 import logging
-import convertor_config
 import json
 import asyncio_redis
+from collections import namedtuple
+
+import convertor_config
 
 logger = logging.getLogger("asyncio")
 redis_connection = None
+Value = namedtuple('Value', 'rate valid')
 
 
 async def connect_db():
@@ -60,8 +63,7 @@ async def database_post(method, params):
     new_rates = dict()
     for rate in rates:
         key = rate['from_curr'][:3].upper() + rate['to_curr'][:3].upper()
-        value = {'valid': 1, 'rate': float(rate['rate'])}
-        new_rates[key] = json.dumps(value)
+        new_rates[key] = json.dumps(Value(rate=float(rate['rate']), valid=1))
 
     if not merge:  # invalidate rates in db, which are not present in update request
         db_keys = await get_db_keys()
@@ -69,8 +71,8 @@ async def database_post(method, params):
         old_rates = dict()
         for key in keys_to_invalidate:
             json_string = await redis_connection.get(key)
-            value = json.loads(json_string)
-            value['valid'] = 0
+            value = Value(*json.loads(json_string))
+            value.valid = 0
             old_rates[key] = json.dumps(value)
         try:
             await run_update_transaction(old_rates)
@@ -100,9 +102,9 @@ async def convert_get(method, params):
     json_string = await redis_connection.get(key)
     if not json_string:
         return error_result(f'unknown currency pair'), 400
-    value = json.loads(json_string)
-    if not value['valid']:
+    value = Value(*json.loads(json_string))
+    if not value.valid:
         return error_result(f'no valid rate for this currency pair'), 400
 
-    to_amount = from_amount * value['rate']
+    to_amount = from_amount * value.rate
     return {'to_amount': f'{to_amount:.2f}'}, 200
