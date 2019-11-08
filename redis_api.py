@@ -56,7 +56,7 @@ async def database_post(method, params):
         merge = int(params['merge'])
         rates = params['rates']
     except (KeyError, ValueError):
-        return error_result('missing the query param: merge, or it has invalid value, allowed (0,1)'), 400
+        return error_result('invalid merge param value, allowed (0,1)'), 400
 
     new_rates = dict()
     for rate in rates:
@@ -100,13 +100,10 @@ async def convert_get(method, params):
     key = from_curr + to_curr
     json_string = await redis_connection.get(key)
     if not json_string:
-        result = error_result(f'unknown currency pair')
-        return result, 400
+        return error_result(f'unknown currency pair'), 400
     value = json.loads(json_string)
-    rate = value.get('rate')
-    valid = value.get('valid')
-    if not valid:
+    if not value['valid']:
         return error_result(f'no valid rate for this currency pair'), 400
 
-    to_amount = from_amount * rate
+    to_amount = from_amount * value['rate']
     return {'to_amount': f'{to_amount:.2f}'}, 200
