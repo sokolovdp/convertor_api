@@ -10,7 +10,7 @@ redis_connection = None
 async def connect_db():
     global redis_connection
 
-    redis_connection = await asyncio_redis.Connection.create(  # for production better to use Pool
+    redis_connection = await asyncio_redis.Connection.create(  # for production use Pool, and create DB
         host=convertor_config.DATABASE_HOST,
         port=convertor_config.DATABASE_PORT,
     )
