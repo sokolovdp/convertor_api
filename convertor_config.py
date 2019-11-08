@@ -18,4 +18,3 @@ if DATABASE_TYPE == 'redis':
     DATABASE_PORT = os.getenv('DATABASE_PORT', 6379)
 else:
     DATABASE_HOST = os.getenv('DATABASE_HOST', 'postgresql://postgres:postgres@localhost')
-

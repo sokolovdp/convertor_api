@@ -73,7 +73,7 @@ async def request_handler(main_loop, conn):
 
 
 async def http_server(sock, main_loop):
-    logger.info('converter server started.....')
+    logger.info('converter server started...')
     while True:
         conn, addr = await main_loop.sock_accept(sock)
         main_loop.create_task(request_handler(main_loop, conn))
