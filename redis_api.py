@@ -65,14 +65,13 @@ async def database_post(method, params):
     if not merge:  # invalidate rates in db, which are not present in update request
         db_keys = await get_db_keys()
         keys_to_invalidate = set(db_keys) - set(new_rates.keys())
-        old_rates = dict()
+        invalid_rates = dict()
         for key in keys_to_invalidate:
             json_string = await redis_connection.get(key)
             old_value = Value(*json.loads(json_string))
-            new_value = Value(rate=old_value.rate, valid=0)
-            old_rates[key] = json.dumps(new_value)
+            invalid_rates[key] = json.dumps(Value(rate=old_value.rate, valid=0))
         try:
-            await run_update_transaction(old_rates)
+            await run_update_transaction(invalid_rates)
         except Exception as e:
             return error_result(f'redis error: {repr(e)}'), 500
 
