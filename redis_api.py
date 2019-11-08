@@ -13,7 +13,6 @@ async def connect_db():
     redis_connection = await asyncio_redis.Connection.create(  # for production better to use Pool
         host=convertor_config.DATABASE_HOST,
         port=convertor_config.DATABASE_PORT,
-        # db=convertor_config.DATABASE_NAME
     )
 
 
