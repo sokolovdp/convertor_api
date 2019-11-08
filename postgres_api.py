@@ -1,7 +1,7 @@
 import logging
 from databases import Database
 from sqlalchemy.exc import ArgumentError
-import convertor_config
+import converter_config
 
 
 GET_RATE = "SELECT xrates.rate, xrates.valid FROM xrates " \
@@ -13,7 +13,7 @@ UPSERT_RATE = "INSERT INTO xrates (from_curr, to_curr, rate, valid) " \
               "DO UPDATE SET (rate, valid) = (:rate, true)"
 
 logger = logging.getLogger("asyncio")
-database = Database(convertor_config.DATABASE_HOST)
+database = Database(converter_config.DATABASE_HOST)
 
 
 async def connect_db():

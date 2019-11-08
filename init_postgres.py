@@ -2,7 +2,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.exc import DBAPIError, IntegrityError
 
 import tables
-import convertor_config
+import converter_config
 
 initial_xrates = [
     {
@@ -32,7 +32,7 @@ initial_xrates = [
 ]
 
 if __name__ == '__main__':
-    database_url = convertor_config.DATABASE_HOST
+    database_url = converter_config.DATABASE_HOST
 
     print(f'creating xrates tables, database url="{database_url}" ...')
 

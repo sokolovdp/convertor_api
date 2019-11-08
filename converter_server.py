@@ -5,14 +5,14 @@ import socket
 import logging
 
 import api
-import convertor_config
+import converter_config
 
 Request = namedtuple('Request', 'method url params')
 
 logging.basicConfig(
-    level=convertor_config.LOGGING_LEVEL,
-    format=convertor_config.LOGGING_FORMAT,
-    datefmt=convertor_config.LOGGING_DATE_FORMAT
+    level=converter_config.LOGGING_LEVEL,
+    format=converter_config.LOGGING_FORMAT,
+    datefmt=converter_config.LOGGING_DATE_FORMAT
 )
 logger = logging.getLogger("asyncio")
 
@@ -52,7 +52,7 @@ def parse_request(request: bytes) -> tuple:
 
 
 async def request_handler(main_loop, conn):
-    req_bytes = await main_loop.sock_recv(conn, convertor_config.MAX_REQUEST_LENGTH)
+    req_bytes = await main_loop.sock_recv(conn, converter_config.MAX_REQUEST_LENGTH)
     if req_bytes:
         try:
             request = Request(*parse_request(req_bytes))
@@ -83,11 +83,11 @@ def main():
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     server_socket.setblocking(False)
-    server_socket.bind((convertor_config.SERVER_HOST, convertor_config.SERVER_PORT))
+    server_socket.bind((converter_config.SERVER_HOST, converter_config.SERVER_PORT))
     server_socket.listen(10)
 
     main_loop = asyncio.get_event_loop()
-    main_loop.set_debug(enabled=convertor_config.DEBUG_MODE)
+    main_loop.set_debug(enabled=converter_config.DEBUG_MODE)
 
     try:
         main_loop.run_until_complete(api.connect_db())

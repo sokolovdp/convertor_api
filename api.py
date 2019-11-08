@@ -1,6 +1,6 @@
-import convertor_config
+import converter_config
 
-if convertor_config.DATABASE_TYPE == 'redis':
+if converter_config.DATABASE_TYPE == 'redis':
     from redis_api import connect_db, disconnect_db, convert_get, database_post
 else:
     from postgres_api import connect_db, disconnect_db, convert_get, database_post

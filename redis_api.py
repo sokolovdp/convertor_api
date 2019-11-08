@@ -3,7 +3,7 @@ import json
 import asyncio_redis
 from collections import namedtuple
 
-import convertor_config
+import converter_config
 
 logger = logging.getLogger("asyncio")
 redis_connection = None
@@ -14,8 +14,8 @@ async def connect_db():
     global redis_connection
 
     redis_connection = await asyncio_redis.Connection.create(  # for production use Pool, and create DB
-        host=convertor_config.DATABASE_HOST,
-        port=convertor_config.DATABASE_PORT,
+        host=converter_config.DATABASE_HOST,
+        port=converter_config.DATABASE_PORT,
     )
 
 
