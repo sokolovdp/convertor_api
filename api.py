@@ -1,5 +1,9 @@
-# from postgres_api import connect_db, disconnect_db, convert_get, database_post
-from redis_api import connect_db, disconnect_db, convert_get, database_post
+import convertor_config
+
+if convertor_config.DATABASE_TYPE == 'redis':
+    from redis_api import connect_db, disconnect_db, convert_get, database_post
+else:
+    from postgres_api import connect_db, disconnect_db, convert_get, database_post
 
 
 routes = {  # simple routes (no url params)
