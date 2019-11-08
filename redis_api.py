@@ -7,7 +7,7 @@ import convertor_config
 
 logger = logging.getLogger("asyncio")
 redis_connection = None
-Value = namedtuple('Value', 'rate valid')
+Value = namedtuple('Value', 'rate valid')  # tuple to store rate
 
 
 async def connect_db():
