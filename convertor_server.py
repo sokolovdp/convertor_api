@@ -61,12 +61,12 @@ async def request_handler(main_loop, conn):
         except KeyError:
             status = 404
             result = {"error": "unknown api path"}
-        except (ValueError, TypeError):
-            status = 400
-            result = {"error": "invalid request params"}
-        except Exception as e:
-            status = 500
-            result = '{"error": "server error: ' + repr(e) + '"}'
+        # except (ValueError, TypeError):
+        #     status = 400
+        #     result = {"error": "invalid request params"}
+        # except Exception as e:
+        #     status = 500
+        #     result = '{"error": "server error: ' + repr(e) + '"}'
         response = make_response(result, status)
         await main_loop.sock_sendall(conn, response)
     conn.close()
