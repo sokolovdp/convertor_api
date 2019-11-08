@@ -1,4 +1,4 @@
-sqlalchemy>=1.3.10
+sqlalchemy
 databases
 asyncpg
 psycopg2-binary
