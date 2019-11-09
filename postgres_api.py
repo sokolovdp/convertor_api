@@ -24,12 +24,12 @@ async def disconnect_db():
     await database.disconnect()
 
 
-def error_result(message):
+def error_result(message: str) -> dict:
     logger.info(message)
     return {'error': message}
 
 
-async def database_post(method, params):
+async def database_post(method: str, params: dict) -> tuple:
     if method not in ('POST', 'PUT', 'PATCH'):
         return error_result(f'method {method} not allowed'), 405
 
@@ -56,7 +56,7 @@ async def database_post(method, params):
     return {'result': "rates updated"}, 200
 
 
-async def convert_get(method, params):
+async def convert_get(method: str, params: dict) -> tuple:
     if method != 'GET':
         return error_result(f'method {method} not allowed'), 405
 

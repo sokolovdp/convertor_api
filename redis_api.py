@@ -25,7 +25,7 @@ async def disconnect_db():
     redis_connection.close()
 
 
-def error_result(message):
+def error_result(message: str) -> dict:
     logger.info(message)
     return {'error': message}
 
@@ -47,8 +47,8 @@ async def run_update_transaction(data: dict):
         await transaction.exec()
 
 
-async def database_post(method, params):
-    if method not in ('POST', 'PUT', 'PATCH'):
+async def database_post(method: str, params: dict) -> tuple:
+    if method not in ('POST', ': PUT', 'PATCH'):
         return error_result(f'method {method} not allowed'), 405
 
     try:
@@ -83,7 +83,7 @@ async def database_post(method, params):
     return {'result': "rates updated"}, 200
 
 
-async def convert_get(method, params):
+async def convert_get(method: str, params: dict) -> tuple:
     if method != 'GET':
         return error_result(f'method {method} not allowed'), 405
 
