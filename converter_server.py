@@ -81,7 +81,7 @@ def main():
     server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     server_socket.setblocking(False)
     server_socket.bind((converter_config.SERVER_HOST, converter_config.SERVER_PORT))
-    server_socket.listen(10)
+    server_socket.listen(converter_config.LISTEN_BACKLOG)
 
     main_loop = asyncio.get_event_loop()
     main_loop.set_debug(enabled=converter_config.DEBUG_MODE)

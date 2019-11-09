@@ -9,6 +9,7 @@ LOGGING_DATE_FORMAT = "%H:%M:%S"
 SERVER_HOST = '0.0.0.0'
 SERVER_PORT = 8888
 MAX_REQUEST_LENGTH = 1024  # for sock_recv
+LISTEN_BACKLOG = 10
 
 # database settings:
 DATABASE_TYPE = os.getenv('DATABASE_TYPE', 'redis')
