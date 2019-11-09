@@ -1,8 +1,17 @@
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, MetaData, Table, Column, FLOAT, Boolean, CHAR
 from sqlalchemy.exc import DBAPIError, IntegrityError
 
-import tables
 import converter_config
+
+
+xrates = Table(
+    'xrates', MetaData(),
+    Column('from_curr', CHAR(3), nullable=False),
+    Column('to_curr', CHAR(3), nullable=False),
+    Column('rate', FLOAT, nullable=False),
+    Column('valid', Boolean, nullable=False),
+)
+
 
 initial_xrates = [
     {
@@ -39,7 +48,7 @@ if __name__ == '__main__':
     db_engine = create_engine(database_url, echo=True)
     db_connection = db_engine.connect()
     try:
-        tables.xrates.create(db_connection)
+        xrates.create(db_connection)
         # create unique multicolumn index
         db_connection.execute('CREATE UNIQUE INDEX from_to_idx ON xrates (from_curr, to_curr)')
     except DBAPIError as db_error:
@@ -49,7 +58,7 @@ if __name__ == '__main__':
             print(f'\nDB error code: {db_error.orig.pgcode}\n')
 
     try:
-        query = tables.xrates.insert()
+        query = xrates.insert()
         db_connection.execute(query, initial_xrates)
     except IntegrityError:
         print(f'\nxrates data already filled in!\n')
