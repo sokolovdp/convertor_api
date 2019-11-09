@@ -23,7 +23,7 @@ def make_header(status: int) -> bytes:
     return header.encode()
 
 
-def make_response(result: dict, status=200) -> bytes:
+def make_response(result: dict, status: int) -> bytes:
     json_string = json.dumps(result)
     header = make_header(status)
     body = json_string.encode() if json_string else b''
