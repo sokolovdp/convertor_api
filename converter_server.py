@@ -59,14 +59,11 @@ async def request_handler(main_loop, conn):
             logger.debug(f'request: {request.method} {request.url}  {request.params}')
             result, status = await api.routes[request.url](request.method, request.params)
         except KeyError:
-            status = 404
-            result = {"error": "unknown api route url"}
+            result, status = {"error": "unknown api route url"}, 404
         except (ValueError, TypeError):
-            status = 400
-            result = {"error": "invalid request params"}
+            result, status = {"error": "invalid request params"}, 400
         except Exception as e:
-            status = 500
-            result = {"error": f"server error: {str(e)}"}
+            result, status = {"error": f"server error: {str(e)}"}, 500
         response = make_response(result, status)
         await main_loop.sock_sendall(conn, response)
     conn.close()
