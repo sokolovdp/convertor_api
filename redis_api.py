@@ -100,7 +100,7 @@ async def convert_get(method: str, params: dict) -> tuple:
         return error_result(f'unknown currency pair'), 400
     value = Value(*json.loads(json_string))
     if not value.valid:
-        return error_result(f'no valid rate for this currency pair'), 400
+        return error_result('no valid rate for this currency pair'), 400
 
     to_amount = from_amount * value.rate
     return {'to_amount': f'{to_amount:.2f}'}, 200

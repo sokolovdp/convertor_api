@@ -53,7 +53,7 @@ if __name__ == '__main__':
         db_connection.execute('CREATE UNIQUE INDEX from_to_idx ON xrates (from_curr, to_curr)')
     except DBAPIError as db_error:
         if db_error.orig.pgcode == '42P07':
-            print(f'\nxrates table already exists!\n')
+            print('\nxrates table already exists!\n')
         else:
             print(f'\nDB error code: {db_error.orig.pgcode}\n')
 
@@ -61,6 +61,6 @@ if __name__ == '__main__':
         query = xrates.insert()
         db_connection.execute(query, initial_xrates)
     except IntegrityError:
-        print(f'\nxrates data already filled in!\n')
+        print('\nxrates data already filled in!\n')
 
     print('\nxrate table created and populated with initial data\n')
